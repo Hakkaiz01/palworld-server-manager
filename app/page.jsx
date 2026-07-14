@@ -123,7 +123,8 @@ function WorldCard({ w, busy, onAction, metrics }) {
         padding: "1.25rem 1.5rem",
         display: "flex",
         alignItems: "center",
-        gap: "1.25rem",
+        gap: "1rem",
+        flexWrap: "wrap",
         overflow: "hidden",
         cursor: "pointer",
         transition: "transform 220ms ease-out, box-shadow 220ms ease-out",
@@ -146,7 +147,7 @@ function WorldCard({ w, busy, onAction, metrics }) {
           </>
         )}
 
-        {/* Avatar */}
+        {/* Avatar - always visible */}
         <div style={{
           position: "relative", zIndex: 1,
           width: 64, height: 64, borderRadius: "18px", flexShrink: 0,
@@ -170,9 +171,9 @@ function WorldCard({ w, busy, onAction, metrics }) {
           }} />
         </div>
 
-        {/* Info */}
-        <div style={{ position: "relative", zIndex: 1, flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+        {/* Info - flexes, min-width so it doesn't vanish */}
+        <div style={{ position: "relative", zIndex: 1, flex: "1 1 200px", minWidth: 160 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
             <span className="heading" style={{ fontSize: "20px", color: "var(--ink)" }}>
               {w.display_name}
             </span>
@@ -191,47 +192,50 @@ function WorldCard({ w, busy, onAction, metrics }) {
           </div>
         </div>
 
-        {/* Metrics */}
-        <div style={{ position: "relative", zIndex: 1, display: "flex", gap: "1.25rem", flexShrink: 0 }}>
-          <Metric icon="users" label={t("common.players")} value={w.live ? `${w.live.currentPlayers}${w.live.maxPlayers ? "/" + w.live.maxPlayers : ""}` : "—"} />
-          <Metric icon="clock" label={t("common.uptime")} value={w.live ? fmtUptime(w.live.uptime) : "—"} />
-          <Metric icon="activity" label={t("world.serverFps")} value={w.live?.fps ?? "—"} />
-          {metrics && metrics.items && (() => {
-            const m = metrics.items.find((i) => i.world_id === w.world_id);
-            if (!m || !m.history || m.history.length < 2) return null;
-            return (
-              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                <div style={{ width: 36, height: 36, borderRadius: "var(--radius-sm)", background: "rgba(255,255,255,0.04)", display: "grid", placeItems: "center" }}>
-                  <Sparkline points={m.history} color={accent} width={28} height={16} />
+        {/* Metrics + Actions row - wraps together */}
+        <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: "0.75rem", flex: "1 1 auto", minWidth: 0, flexWrap: "wrap" }}>
+          {/* Metrics */}
+          <div style={{ display: "flex", gap: "0.75rem", flex: "1 1 auto", flexWrap: "wrap" }}>
+            <Metric icon="users" label={t("common.players")} value={w.live ? `${w.live.currentPlayers}${w.live.maxPlayers ? "/" + w.live.maxPlayers : ""}` : "—"} />
+            <Metric icon="clock" label={t("common.uptime")} value={w.live ? fmtUptime(w.live.uptime) : "—"} />
+            <Metric icon="activity" label={t("world.serverFps")} value={w.live?.fps ?? "—"} />
+            {metrics && metrics.items && (() => {
+              const m = metrics.items.find((i) => i.world_id === w.world_id);
+              if (!m || !m.history || m.history.length < 2) return null;
+              return (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "var(--radius-sm)", background: "rgba(255,255,255,0.04)", display: "grid", placeItems: "center" }}>
+                    <Sparkline points={m.history} color={accent} width={28} height={16} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--ink)" }}>{m.cpu}%</div>
+                    <div className="subtle" style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>CPU</div>
+                  </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--ink)" }}>{m.cpu}%</div>
-                  <div className="subtle" style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>CPU</div>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
+              );
+            })()}
+          </div>
 
-        {/* Actions */}
-        <div style={{ position: "relative", zIndex: 1, display: "flex", gap: "0.5rem", flexShrink: 0 }} onClick={(e) => e.preventDefault()}>
-          {w.running ? (
-            <>
-              <button className="btn btn-outline" disabled={isBusy} onClick={() => onAction(w.world_id, "restart")} title={t("common.restart")} style={{ height: "40px", borderRadius: "var(--radius-md)", padding: "0 1rem" }}>
-                <Icon name="restart" size={16} />
+          {/* Actions */}
+          <div style={{ flexShrink: 0 }} onClick={(e) => e.preventDefault()}>
+            {w.running ? (
+              <div style={{ display: "flex", gap: "0.4rem" }}>
+                <button className="btn btn-outline" disabled={isBusy} onClick={() => onAction(w.world_id, "restart")} title={t("common.restart")} style={{ height: "40px", borderRadius: "var(--radius-md)", padding: "0 1rem" }}>
+                  <Icon name="restart" size={16} />
+                </button>
+                <button className="btn btn-danger" disabled={isBusy} onClick={() => onAction(w.world_id, "stop")} title={t("common.stop")} style={{ height: "40px", borderRadius: "var(--radius-md)", padding: "0 1rem" }}>
+                  <Icon name="stop" size={16} />
+                </button>
+              </div>
+            ) : (
+              <button className="btn btn-gradient" disabled={isBusy} onClick={() => onAction(w.world_id, "start")} title={t("common.start")} style={{ height: "40px", borderRadius: "var(--radius-md)", padding: "0 1.25rem" }}>
+                <Icon name="play" size={16} /> {busy === "start" ? t("common.starting") : t("common.start")}
               </button>
-              <button className="btn btn-danger" disabled={isBusy} onClick={() => onAction(w.world_id, "stop")} title={t("common.stop")} style={{ height: "40px", borderRadius: "var(--radius-md)", padding: "0 1rem" }}>
-                <Icon name="stop" size={16} />
-              </button>
-            </>
-          ) : (
-            <button className="btn btn-gradient" disabled={isBusy} onClick={() => onAction(w.world_id, "start")} title={t("common.start")} style={{ height: "40px", borderRadius: "var(--radius-md)", padding: "0 1.25rem" }}>
-              <Icon name="play" size={16} /> {busy === "start" ? t("common.starting") : t("common.start")}
-            </button>
-          )}
-          <Link href={`/worlds/${w.world_id}`} className="btn btn-outline" style={{ height: "40px", borderRadius: "var(--radius-md)", padding: "0 1rem", textDecoration: "none" }} onClick={(e) => e.stopPropagation()}>
-            <Icon name="chevronRight" size={16} />
-          </Link>
+            )}
+            <Link href={`/worlds/${w.world_id}`} className="btn btn-outline" style={{ height: "40px", borderRadius: "var(--radius-md)", padding: "0 1rem", textDecoration: "none", marginLeft: "0.4rem" }} onClick={(e) => e.stopPropagation()}>
+              <Icon name="chevronRight" size={16} />
+            </Link>
+          </div>
         </div>
       </div>
     </Link>
