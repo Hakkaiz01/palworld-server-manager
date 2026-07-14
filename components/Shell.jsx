@@ -47,7 +47,7 @@ export default function Shell({ children }) {
       {/* PSM 3.0 fixed-width glass sidebar */}
       <aside style={{
         width: 280,
-        background: "#121024",
+        background: "var(--sidebar)",
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,
@@ -56,6 +56,7 @@ export default function Shell({ children }) {
         boxShadow: "8px 0 32px rgba(0,0,0,0.35)",
         backdropFilter: "blur(18px)",
         WebkitBackdropFilter: "blur(18px)",
+        borderRight: "1px solid var(--line)",
       }}>
         {/* Logo area */}
         <div style={{ padding: "24px" }}>
@@ -64,12 +65,12 @@ export default function Shell({ children }) {
               <img src="/icon.png" alt="PSM" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
             <div>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.05rem", lineHeight: 1.2 }}>PSM</div>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.72rem", color: "#7C7696", lineHeight: 1.2 }}>{t("app.name")}</div>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.05rem", lineHeight: 1.2, color: "var(--ink)" }}>PSM</div>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.72rem", color: "var(--ink-muted)", lineHeight: 1.2 }}>{t("app.name")}</div>
             </div>
           </div>
         </div>
-        <div style={{ margin: "0 24px", height: 1, background: "rgba(255,255,255,0.06)" }} />
+        <div style={{ margin: "0 24px", height: 1, background: "var(--line)" }} />
 
         {/* nav */}
         <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "10px 18px 18px" }}>
@@ -78,7 +79,7 @@ export default function Shell({ children }) {
             fontWeight: 600,
             textTransform: "uppercase",
             letterSpacing: "0.08em",
-            color: "#7C7696",
+            color: "var(--ink-muted)",
             padding: "24px 24px 12px",
           }}>
             {t("sidebar.management")}
@@ -91,7 +92,7 @@ export default function Shell({ children }) {
 
         {/* footer: server status + version / update */}
         <div style={{ padding: "18px 24px", flexShrink: 0 }}>
-          <div style={{ margin: "0 0 14px", height: 1, background: "rgba(255,255,255,0.06)" }} />
+          <div style={{ margin: "0 0 14px", height: 1, background: "var(--line)" }} />
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: 14 }}>
             <span style={{ width: 8, height: 8, borderRadius: 999, background: "var(--green-bright)", boxShadow: "0 0 8px rgba(74,222,128,0.45)" }} />
             <span style={{ fontWeight: 600, fontSize: "0.78rem", color: "var(--ink-soft)" }}>{t("server.online") || "Online"}</span>
@@ -110,8 +111,8 @@ export default function Shell({ children }) {
             </button>
           )}
           <div style={{ lineHeight: 1.2 }}>
-            <div style={{ fontWeight: 700, fontSize: "0.78rem", whiteSpace: "nowrap" }}>{t("app.name")}</div>
-            <div style={{ fontSize: "0.68rem", color: "#7C7696" }}>
+            <div style={{ fontWeight: 700, fontSize: "0.78rem", whiteSpace: "nowrap", color: "var(--ink)" }}>{t("app.name")}</div>
+            <div style={{ fontSize: "0.68rem", color: "var(--ink-muted)" }}>
               v{ver?.current || "—"}{ver && !ver.updateAvailable && ver.checked ? ` · ${t("app.upToDate")}` : ""}
             </div>
           </div>

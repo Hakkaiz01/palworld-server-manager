@@ -35,6 +35,7 @@
   --font-display: "Inter", "Segoe UI", system-ui, sans-serif;
   --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
   --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, monospace;
+  --bg-gradient: linear-gradient(180deg, #f0eef5 0%, #f7f7f9 50%, #edeef2 100%);
 }
 
 .dark {
@@ -72,7 +73,7 @@
 html, body { padding: 0; margin: 0; }
 
 body {
-  background: linear-gradient(180deg, #090811 0%, #0f0a18 50%, #141026 100%);
+  background: var(--bg-gradient, linear-gradient(180deg, #090811 0%, #0f0a18 50%, #141026 100%));
   background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
