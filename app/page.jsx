@@ -98,7 +98,7 @@ export default function WorldsPage() {
       ) : (
         <div style={{ display: "grid", gap: "0.9rem" }}>
           {worlds.map((w) => (
-            <WorldRow key={w.world_id} w={w} busy={busy[w.world_id]} onAction={doAction} />
+            <WorldRow key={w.world_id} w={w} busy={busy[w.world_id]} onAction={doAction} metrics={metrics} />
           ))}
         </div>
       )}
@@ -110,7 +110,7 @@ export default function WorldsPage() {
   );
 }
 
-function WorldRow({ w, busy, onAction }) {
+function WorldRow({ w, busy, onAction, metrics }) {
   const { t } = useTranslation();
   const isBusy = !!busy;
   const accent = w.accent_color || "var(--accent)";
