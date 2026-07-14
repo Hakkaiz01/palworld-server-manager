@@ -1,13 +1,13 @@
-/* app/globals.css — Discord-inspired flat UI */
+/* app/globals.css — Purple/Pink dark theme */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* LIGHT (Discord light theme family) */
-  --rail: #e3e5e8;        /* far-left icon rail */
-  --sidebar: #f2f3f5;     /* channel sidebar */
-  --bg: #ffffff;          /* main content */
+  /* LIGHT (kept minimal — app is dark-first) */
+  --rail: #e3e5e8;
+  --sidebar: #f2f3f5;
+  --bg: #ffffff;
   --bg-2: #f2f3f5;
   --card: #ffffff;
   --card-2: #ebedef;
@@ -16,8 +16,8 @@
   --ink-muted: #6d6f78;
   --line: #e0e1e5;
   --line-strong: #cdcfd3;
-  --accent: #5865f2;      /* blurple */
-  --accent-hover: #4752c4;
+  --accent: #a855f7;        /* purple-500 */
+  --accent-hover: #9333ea;  /* purple-600 */
   --accent-ink: #ffffff;
   --green: #248046;
   --green-bright: #23a55a;
@@ -30,26 +30,26 @@
 }
 
 .dark {
-  /* DARK (Discord dark theme) */
-  --rail: #1e1f22;
-  --sidebar: #2b2d31;
-  --bg: #313338;
-  --bg-2: #2b2d31;
-  --card: #2b2d31;
-  --card-2: #1e1f22;
+  /* DARK — Purple/Pink theme */
+  --rail: #0d001a;          /* deep black-purple */
+  --sidebar: #1a0a2e;       /* dark purple */
+  --bg: #0d001a;            /* black with purple tint */
+  --bg-2: #1a0a2e;
+  --card: #1f0d3a;          /* medium dark purple */
+  --card-2: #2d1a4e;        /* lighter purple */
   --ink: #f2f3f5;
-  --ink-soft: #b5bac1;
-  --ink-muted: #949ba4;
-  --line: #3f4147;
-  --line-strong: #232428;
-  --accent: #5865f2;
-  --accent-hover: #4752c4;
+  --ink-soft: #c4b5d4;      /* soft lavender */
+  --ink-muted: #9d8ab5;     /* muted purple-gray */
+  --line: #3b1f5e;          /* subtle purple border */
+  --line-strong: #4a2d6e;   /* stronger purple border */
+  --accent: #d946ef;        /* fuchsia-500 (rosa) */
+  --accent-hover: #c026d3;  /* fuchsia-600 */
   --accent-ink: #ffffff;
-  --green: #248046;
-  --green-bright: #23a55a;
-  --yellow: #f0b232;
-  --red: #da373c;
-  --red-hover: #a12828;
+  --green: #22c55e;
+  --green-bright: #4ade80;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --red-hover: #dc2626;
   --radius: 4px;
 }
 
@@ -63,6 +63,11 @@ body {
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   font-size: 15px;
+}
+
+/* Purple gradient background for main content area */
+.dark main {
+  background: linear-gradient(180deg, #0d001a 0%, #1a0a2e 50%, #0d001a 100%);
 }
 
 @layer components {
@@ -142,11 +147,11 @@ body {
 .console {
   font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
   font-size: 0.78rem; line-height: 1.5;
-  background: var(--card-2); color: #b5bac1;
+  background: var(--card-2); color: #c4b5d4;
   border-radius: var(--radius); padding: 0.8rem; overflow: auto;
   border: 1px solid var(--line);
 }
-.dark .console { color: #dbdee1; }
+.dark .console { color: #d4c4e8; }
 .console .ln { white-space: pre-wrap; word-break: break-word; }
 
 @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:0.35} }
@@ -177,7 +182,7 @@ body {
 }
 .world-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+  box-shadow: 0 8px 24px rgba(168,85,247,0.15);
 }
 
 /* generic smooth interactions */

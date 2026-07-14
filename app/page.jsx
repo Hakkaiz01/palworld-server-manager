@@ -7,9 +7,25 @@ import CreateWorldModal from "@/components/CreateWorldModal";
 
 const ACTION_TOAST = { start: "toast.worldStarted", stop: "toast.worldStopped", restart: "toast.worldRestarted" };
 
+// Mini CPU sparkline — dependency-free inline SVG
+function Sparkline({ points, color, width = 80, height = 24 }) {
+  if (!points || points.length < 2) return null;
+  const vals = points.map((p) => p.v);
+  const min = Math.min(...vals), max = Math.max(...vals) || 1;
+  const range = max - min || 1;
+  const step = width / (vals.length - 1);
+  const pts = vals.map((v, i) => `${i * step},${height - ((v - min) / range) * (height - 2) - 1}`).join(" ");
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block" }}>
+      <polyline fill="none" stroke={color || "var(--accent)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" points={pts} />
+    </svg>
+  );
+}
+
 export default function WorldsPage() {
   const { t } = useTranslation();
   const [worlds, setWorlds] = useState([]);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [busy, setBusy] = useState({});
@@ -17,8 +33,12 @@ export default function WorldsPage() {
 
   const load = useCallback(async () => {
     try {
-      const { worlds } = await api("/api/worlds");
-      setWorlds(worlds);
+      const [worldsRes, metricsRes] = await Promise.all([
+        api("/api/worlds"),
+        fetch("/api/metrics", { cache: "no-store" }).then((r) => r.json()).catch(() => null),
+      ]);
+      setWorlds(worldsRes.worlds);
+      if (metricsRes?.ok) setMetrics(metricsRes);
     } catch (e) { toast(e.message, "error"); }
     finally { setLoading(false); }
   }, []);
@@ -143,8 +163,19 @@ function WorldRow({ w, busy, onAction }) {
       <div style={{ position: "relative", zIndex: 1, display: "flex", gap: "1.4rem", textAlign: "center" }}>
         <Stat label={t("common.players")} value={w.live ? `${w.live.currentPlayers}${w.live.maxPlayers ? "/" + w.live.maxPlayers : ""}` : "—"} />
         <Stat label={t("common.uptime")} value={w.live ? fmtUptime(w.live.uptime) : "—"} />
+        <Stat label={t("world.serverFps")} value={w.live?.fps ?? "—"} />
         <Stat label={t("common.day")} value={w.live?.days ?? "—"} />
       </div>
+      {metrics && metrics.items && (() => {
+        const m = metrics.items.find((i) => i.world_id === w.world_id);
+        if (!m || !m.history || m.history.length < 2) return null;
+        return (
+          <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.1rem" }}>
+            <Sparkline points={m.history} color={w.accent_color || "var(--accent)"} />
+            <span className="subtle" style={{ fontSize: "0.6rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>CPU</span>
+          </div>
+        );
+      })()}
 
       <div style={{ position: "relative", zIndex: 1, display: "flex", gap: "0.5rem", flexShrink: 0 }}>
         {w.running ? (
