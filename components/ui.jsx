@@ -35,13 +35,41 @@ export function fmtTime(ts) {
   return new Date(ts).toLocaleString();
 }
 
+const statusColor = {
+  running: "#28E98A",
+  stopped: "#7C7696",
+  crashed: "#FF5E75",
+};
+
 export function StatusChip({ status, running }) {
   const { t } = useTranslation();
   const s = running && status === "running" ? "running" : status;
+  const color = statusColor[s] || statusColor.stopped;
   return (
-    <span className="chip" style={{ background: "var(--card-2)", border: "1px solid var(--line)" }}>
-      <span className={`statdot bg-${s} ${s === "running" ? "animate-pulseDot" : ""}`} />
-      <span className={`s-${s}`}>{t(`status.${s}`, { defaultValue: s })}</span>
+    <span
+      className="chip"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "8px",
+        background: "rgba(255,255,255,.04)",
+        border: "1px solid rgba(255,255,255,.06)",
+        borderRadius: "8px",
+        padding: "4px 12px",
+        color,
+      }}
+    >
+      <span
+        style={{
+          width: "10px",
+          height: "10px",
+          borderRadius: "50%",
+          background: color,
+          boxShadow: s === "running" ? `0 0 8px ${color}` : "none",
+          animation: s === "running" ? "pulseDot 2.4s ease-in-out infinite" : "none",
+        }}
+      />
+      <span>{t(`status.${s}`, { defaultValue: s })}</span>
     </span>
   );
 }
@@ -81,6 +109,9 @@ export function Icon({ name, size = 18 }) {
     grid: <><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></>,
     activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />,
     cpu: <><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /><line x1="9" y1="1" x2="9" y2="4" /><line x1="15" y1="1" x2="15" y2="4" /><line x1="9" y1="20" x2="9" y2="23" /><line x1="15" y1="20" x2="15" y2="23" /><line x1="20" y1="9" x2="23" y2="9" /><line x1="20" y1="14" x2="23" y2="14" /><line x1="1" y1="9" x2="4" y2="9" /><line x1="1" y1="14" x2="4" y2="14" /></>,
+    zap: <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+    "hard-drive": <><line x1="22" y1="12" x2="2" y2="12" /><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /><line x1="6" y1="16" x2="6.01" y2="16" /><line x1="10" y1="16" x2="10.01" y2="16" /></>,
+    wifi: <><path d="M5 12.55a11 11 0 0 1 14.08 0" /><path d="M1.42 9a16 16 0 0 1 21.16 0" /><path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><line x1="12" y1="20" x2="12.01" y2="20" /></>,
   };
   return <svg {...p}>{paths[name] || null}</svg>;
 }

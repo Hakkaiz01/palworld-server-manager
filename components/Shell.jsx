@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "@/components/ThemeProvider";
 import FirstRunWizard from "@/components/FirstRunWizard";
 import { Icon, registerToast } from "@/components/ui";
 import { useJobsPoll, summarize, ProgressBar } from "@/components/jobsClient";
@@ -18,11 +17,9 @@ const NAV = [
 ];
 
 export default function Shell({ children }) {
-  const { theme, toggle } = useTheme();
   const { t } = useTranslation();
   const path = usePathname();
   const [toasts, setToasts] = useState([]);
-  const [collapsed, setCollapsed] = useState(false);
   const [ver, setVer] = useState(null);
   const jobs = useJobsPoll();
   const jobSummary = summarize(jobs);
@@ -37,12 +34,6 @@ export default function Shell({ children }) {
   };
 
   useEffect(() => {
-    // restore collapse preference
-    try { const v = window.__palSidebar; if (typeof v === "boolean") setCollapsed(v); } catch {}
-  }, []);
-  const toggleCollapse = () => setCollapsed((c) => { const n = !c; try { window.__palSidebar = n; } catch {} return n; });
-
-  useEffect(() => {
     registerToast((msg, kind) => {
       const id = Math.random().toString(36).slice(2);
       setToasts((t) => [...t, { id, msg, kind }]);
@@ -50,56 +41,67 @@ export default function Shell({ children }) {
     });
   }, []);
 
-  const W = collapsed ? 68 : 236;
-
   return (
     <div style={{ display: "flex", minHeight: "100vh", height: "100vh", overflow: "hidden" }}>
       <FirstRunWizard />
-      {/* Single merged collapsible sidebar */}
+      {/* PSM 3.0 fixed-width glass sidebar */}
       <aside style={{
-        width: W, background: "var(--sidebar)", display: "flex", flexDirection: "column",
-        flexShrink: 0, borderRight: "1px solid var(--line-strong)",
-        transition: "width 0.22s cubic-bezier(0.4,0,0.2,1)", overflow: "hidden",
+        width: 280,
+        background: "#121024",
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: 0,
+        overflow: "hidden",
+        position: "relative",
+        boxShadow: "8px 0 32px rgba(0,0,0,0.35)",
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)",
       }}>
-        {/* brand + collapse toggle */}
-        <div style={{ height: 56, display: "flex", alignItems: "center", padding: collapsed ? "0" : "0 0.9rem", justifyContent: collapsed ? "center" : "space-between", borderBottom: "1px solid var(--line-strong)", flexShrink: 0 }}>
-          {!collapsed && (
-            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", minWidth: 0 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 10, overflow: "hidden", display: "grid", placeItems: "center", flexShrink: 0 }}>
-                <img src="/icon.png" alt="PSM" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              </div>
-              <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "0.92rem", whiteSpace: "nowrap" }}>PSM</span>
+        {/* Logo area */}
+        <div style={{ padding: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 12, overflow: "hidden", display: "grid", placeItems: "center", flexShrink: 0, background: "var(--accent)" }}>
+              <img src="/icon.png" alt="PSM" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
-          )}
-          <button onClick={toggleCollapse} title={collapsed ? t("action.expand") : t("action.collapse")}
-            style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--ink-soft)", padding: 7, borderRadius: 8, display: "grid", placeItems: "center", transition: "background 0.15s" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--line)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-            <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={18} />
-          </button>
+            <div>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "1.05rem", lineHeight: 1.2 }}>PSM</div>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.72rem", color: "#7C7696", lineHeight: 1.2 }}>{t("app.name")}</div>
+            </div>
+          </div>
         </div>
+        <div style={{ margin: "0 24px", height: 1, background: "rgba(255,255,255,0.06)" }} />
 
         {/* nav */}
-        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "0.7rem 0.55rem" }}>
-          {!collapsed && (
-            <div className="subtle" style={{ fontSize: "0.64rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", padding: "0.3rem 0.6rem 0.5rem" }}>
-              {t("sidebar.management")}
-            </div>
-          )}
+        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "10px 18px 18px" }}>
+          <div style={{
+            fontSize: 11,
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            color: "#7C7696",
+            padding: "24px 24px 12px",
+          }}>
+            {t("sidebar.management")}
+          </div>
           {NAV.map((n) => (
-            <NavItem key={n.href} {...n} label={t(n.labelKey)} active={n.match(path)} collapsed={collapsed} />
+            <NavItem key={n.href} {...n} label={t(n.labelKey)} active={n.match(path)} />
           ))}
-          <DownloadsNavItem active={path.startsWith("/downloads")} collapsed={collapsed} summary={jobSummary} label={t("nav.downloads")} />
+          <DownloadsNavItem active={path.startsWith("/downloads")} summary={jobSummary} label={t("nav.downloads")} />
         </div>
 
-        {/* footer: app version / update + theme */}
-        <div style={{ padding: "0.55rem", borderTop: "1px solid var(--line-strong)", flexShrink: 0 }}>
-          {!collapsed && ver?.updateAvailable && (
+        {/* footer: server status + version / update */}
+        <div style={{ padding: "18px 24px", flexShrink: 0 }}>
+          <div style={{ margin: "0 0 14px", height: 1, background: "rgba(255,255,255,0.06)" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: 14 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 999, background: "var(--green-bright)", boxShadow: "0 0 8px rgba(74,222,128,0.45)" }} />
+            <span style={{ fontWeight: 600, fontSize: "0.78rem", color: "var(--ink-soft)" }}>{t("server.online") || "Online"}</span>
+          </div>
+          {ver?.updateAvailable && (
             <button onClick={openRelease} title="Open the latest release to download"
               style={{
-                width: "100%", marginBottom: "0.5rem", padding: "0.45rem 0.6rem", borderRadius: 8,
-                background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer",
-                display: "flex", alignItems: "center", gap: "0.45rem", fontWeight: 700, fontSize: "0.78rem",
+                width: "100%", marginBottom: "0.75rem", padding: "0.5rem 0.75rem", borderRadius: 12,
+                background: "linear-gradient(135deg, #6E3CFF 0%, #A43CFF 100%)", color: "#fff", border: "none",
+                cursor: "pointer", display: "flex", alignItems: "center", gap: "0.45rem", fontWeight: 700, fontSize: "0.78rem",
               }}>
               <Icon name="download" size={15} />
               <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -107,37 +109,18 @@ export default function Shell({ children }) {
               </span>
             </button>
           )}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", justifyContent: collapsed ? "center" : "space-between" }}>
-            {!collapsed && (
-              <div style={{ lineHeight: 1.1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: "0.78rem", whiteSpace: "nowrap" }}>
-                  {t("app.name")}
-                </div>
-                <div className="subtle" style={{ fontSize: "0.68rem" }}>
-                  v{ver?.current || "—"}{ver && !ver.updateAvailable && ver.checked ? ` · ${t("app.upToDate")}` : ""}
-                </div>
-              </div>
-            )}
-            {collapsed && ver?.updateAvailable ? (
-              <button onClick={openRelease} title={t("app.updateAvailable", { version: ver.latest })}
-                style={{ background: "var(--accent)", border: "none", cursor: "pointer", color: "#fff", padding: 7, borderRadius: 8, display: "grid", placeItems: "center" }}>
-                <Icon name="download" size={18} />
-              </button>
-            ) : (
-              <button onClick={toggle} title={t("action.toggleTheme")}
-                style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--ink-soft)", padding: 7, borderRadius: 8, display: "grid", placeItems: "center", transition: "background 0.15s" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--line)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-                <Icon name={theme === "dark" ? "sun" : "moon"} size={18} />
-              </button>
-            )}
+          <div style={{ lineHeight: 1.2 }}>
+            <div style={{ fontWeight: 700, fontSize: "0.78rem", whiteSpace: "nowrap" }}>{t("app.name")}</div>
+            <div style={{ fontSize: "0.68rem", color: "#7C7696" }}>
+              v{ver?.current || "—"}{ver && !ver.updateAvailable && ver.checked ? ` · ${t("app.upToDate")}` : ""}
+            </div>
           </div>
         </div>
       </aside>
 
       {/* Main content */}
       <main style={{ flex: 1, overflowY: "auto", background: "var(--bg)" }}>
-        <div style={{ padding: "1.4rem 1.8rem 3rem", maxWidth: 1120, margin: "0 auto" }}>
+        <div style={{ padding: "48px", maxWidth: 1600, margin: "0 auto" }}>
           {children}
         </div>
       </main>
@@ -157,64 +140,67 @@ export default function Shell({ children }) {
   );
 }
 
-function NavItem({ href, icon, label, active, collapsed }) {
+function NavItem({ href, icon, label, active }) {
   return (
-    <Link href={href} title={collapsed ? label : undefined}
+    <Link href={href}
       style={{
-        display: "flex", alignItems: "center", gap: "0.6rem",
-        padding: collapsed ? "0.6rem" : "0.55rem 0.6rem", borderRadius: 8,
-        justifyContent: collapsed ? "center" : "flex-start",
-        textDecoration: "none", fontFamily: "var(--font-display)",
-        fontWeight: 600, fontSize: "0.9rem", marginBottom: 3,
-        background: active ? "var(--accent)" : "transparent",
+        display: "flex", alignItems: "center", gap: "14px",
+        height: 60, padding: "0 24px", borderRadius: 18,
+        textDecoration: "none",
+        fontWeight: 600, fontSize: 15,
         color: active ? "#fff" : "var(--ink-soft)",
-        transition: "background 0.15s, color 0.15s",
+        background: active ? "linear-gradient(135deg, #6E3CFF 0%, #A43CFF 100%)" : "transparent",
+        boxShadow: active ? "0 0 20px rgba(124,77,255,0.30)" : "none",
+        transition: "background 180ms ease-out, color 180ms ease-out, box-shadow 180ms ease-out",
       }}
-      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = "var(--card-2)"; e.currentTarget.style.color = "var(--ink)"; } }}
+      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "var(--ink)"; } }}
       onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--ink-soft)"; } }}
     >
-      <Icon name={icon} size={20} />
-      {!collapsed && <span style={{ whiteSpace: "nowrap" }}>{label}</span>}
+      <Icon name={icon} size={22} />
+      <span style={{ whiteSpace: "nowrap" }}>{label}</span>
     </Link>
   );
 }
 
 // Sidebar "Downloads" entry — a permanent nav item that shows a live count and
 // aggregate progress while installs/updates run, and links to the Downloads page.
-function DownloadsNavItem({ active, collapsed, summary, label }) {
+function DownloadsNavItem({ active, summary, label }) {
   const { activeCount, percent, anyError } = summary;
   const busy = activeCount > 0;
   const dotColor = anyError ? "var(--red)" : "var(--accent)";
 
   return (
-    <Link href="/downloads" title={collapsed ? `${label}${busy ? ` (${activeCount})` : ""}` : undefined}
+    <Link href="/downloads"
       style={{
-        display: "block", padding: collapsed ? "0.6rem" : "0.55rem 0.6rem", borderRadius: 8,
-        textDecoration: "none", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.9rem",
-        marginBottom: 3, marginTop: 2,
-        background: active ? "var(--accent)" : "transparent",
+        display: "block", height: busy ? "auto" : 60, padding: busy ? "10px 24px" : "0 24px",
+        borderRadius: 18, textDecoration: "none", fontWeight: 600, fontSize: 15,
         color: active ? "#fff" : "var(--ink-soft)",
-        transition: "background 0.15s, color 0.15s",
+        background: active ? "linear-gradient(135deg, #6E3CFF 0%, #A43CFF 100%)" : "transparent",
+        boxShadow: active ? "0 0 20px rgba(124,77,255,0.30)" : "none",
+        transition: "background 180ms ease-out, color 180ms ease-out, box-shadow 180ms ease-out",
       }}
-      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = "var(--card-2)"; e.currentTarget.style.color = "var(--ink)"; } }}
+      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "var(--ink)"; } }}
       onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--ink-soft)"; } }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", justifyContent: collapsed ? "center" : "flex-start", position: "relative" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "14px", position: "relative", minHeight: busy ? 40 : 60 }}>
         <span style={{ position: "relative", display: "grid", placeItems: "center" }}>
-          <Icon name="download" size={20} />
+          <Icon name="download" size={22} />
           {busy && (
-            <span className="animate-pulseDot" style={{ position: "absolute", top: -3, right: -4, width: 8, height: 8, borderRadius: 999, background: dotColor, border: "1.5px solid var(--sidebar)" }} />
+            <span className="animate-pulseDot" style={{ position: "absolute", top: -3, right: -4, width: 8, height: 8, borderRadius: 999, background: dotColor, border: "1.5px solid #121024" }} />
           )}
         </span>
-        {!collapsed && <span style={{ whiteSpace: "nowrap", flex: 1 }}>{label}</span>}
-        {!collapsed && busy && (
-          <span className="chip" style={{ background: active ? "rgba(255,255,255,0.2)" : "var(--card-2)", fontSize: "0.7rem", fontWeight: 800, padding: "0.05rem 0.4rem" }}>
+        <span style={{ whiteSpace: "nowrap", flex: 1 }}>{label}</span>
+        {busy && (
+          <span style={{
+            background: active ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.06)",
+            fontSize: "0.7rem", fontWeight: 800, padding: "0.15rem 0.5rem", borderRadius: 999, color: active ? "#fff" : "var(--ink-soft)",
+          }}>
             {activeCount}
           </span>
         )}
       </div>
-      {!collapsed && busy && (
-        <ProgressBar percent={percent} style={{ marginTop: "0.5rem", height: 5 }} />
+      {busy && (
+        <ProgressBar percent={percent} style={{ marginTop: "0.6rem", height: 5, background: "rgba(255,255,255,0.08)" }} />
       )}
     </Link>
   );

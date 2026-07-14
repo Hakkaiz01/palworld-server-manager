@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { api, Icon, StatusChip, fmtUptime, toast } from "@/components/ui";
+import { api, Icon, StatusChip, fmtUptime, fmtBytes, toast } from "@/components/ui";
 import CreateWorldModal from "@/components/CreateWorldModal";
 
 const ACTION_TOAST = { start: "toast.worldStarted", stop: "toast.worldStopped", restart: "toast.worldRestarted" };
@@ -74,18 +74,18 @@ export default function WorldsPage() {
 
   return (
     <div>
-      <header style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "1.2rem", flexWrap: "wrap", gap: "1rem" }}>
+      <header style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 className="heading" style={{ fontSize: "1.9rem", margin: 0 }}>{t("worlds.title")}</h1>
-          <p className="subtle" style={{ margin: "0.2rem 0 0", fontWeight: 700 }}>
+          <h1 className="heading" style={{ fontSize: "40px", margin: 0, lineHeight: 1.1 }}>{t("worlds.title")}</h1>
+          <p className="subtle" style={{ margin: "0.35rem 0 0", fontSize: "16px", fontWeight: 500, color: "var(--ink-soft)" }}>
             {t("worlds.summary", { count: worlds.length, running, players })}
           </p>
         </div>
-        <div style={{ display: "flex", gap: "0.6rem" }}>
-          <button className="btn btn-ghost" onClick={checkUpdates} disabled={checking}>
+        <div style={{ display: "flex", gap: "0.75rem" }}>
+          <button className="btn btn-outline" onClick={checkUpdates} disabled={checking} style={{ height: "48px", borderRadius: "var(--radius-md)" }}>
             <Icon name="refresh" /> {checking ? t("common.checking") : t("worlds.checkUpdates")}
           </button>
-          <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+          <button className="btn btn-gradient" onClick={() => setShowCreate(true)} style={{ height: "48px", borderRadius: "var(--radius-md)" }}>
             <Icon name="plus" /> {t("worlds.newWorld")}
           </button>
         </div>
@@ -96,9 +96,9 @@ export default function WorldsPage() {
       ) : worlds.length === 0 ? (
         <EmptyState onCreate={() => setShowCreate(true)} />
       ) : (
-        <div style={{ display: "grid", gap: "0.9rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "1.25rem" }}>
           {worlds.map((w) => (
-            <WorldRow key={w.world_id} w={w} busy={busy[w.world_id]} onAction={doAction} metrics={metrics} />
+            <WorldCard key={w.world_id} w={w} busy={busy[w.world_id]} onAction={doAction} metrics={metrics} />
           ))}
         </div>
       )}
@@ -110,99 +110,153 @@ export default function WorldsPage() {
   );
 }
 
-function WorldRow({ w, busy, onAction, metrics }) {
+function WorldCard({ w, busy, onAction, metrics }) {
   const { t } = useTranslation();
   const isBusy = !!busy;
   const accent = w.accent_color || "var(--accent)";
+  const glow = w.running ? "var(--green)" : "var(--ink-muted)";
+
   return (
-    <div className="panel world-card animate-floatUp" style={{ position: "relative", padding: "1rem 1.1rem", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap", overflow: "hidden", borderLeft: `3px solid ${accent}` }}>
-      {/* banner: sits on the right, fades toward the center (|||| |  |) */}
+    <div className="panel world-card" style={{
+      position: "relative",
+      height: "330px",
+      borderRadius: "var(--radius-lg)",
+      padding: "1.25rem",
+      display: "flex",
+      flexDirection: "column",
+      gap: "1rem",
+      overflow: "hidden",
+      transition: "transform 220ms ease-out, box-shadow 220ms ease-out",
+    }}>
+      {/* subtle banner wash */}
       {w.banner_data && (
         <>
           <div aria-hidden style={{
             position: "absolute", inset: 0, zIndex: 0,
             backgroundImage: `url(${w.banner_data})`,
-            backgroundSize: "cover", backgroundPosition: "left center",
-            // fade from visible (left edge) to transparent (center) — |  | ||||
-            WebkitMaskImage: "linear-gradient(to left, transparent 30%, rgba(0,0,0,0.35) 62%, rgba(0,0,0,0.75) 100%)",
-            maskImage: "linear-gradient(to left, transparent 30%, rgba(0,0,0,0.35) 62%, rgba(0,0,0,0.75) 100%)",
-            opacity: 0.85, pointerEvents: "none",
+            backgroundSize: "cover", backgroundPosition: "center",
+            opacity: 0.18, pointerEvents: "none",
+            maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 60%)",
+            WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 60%)",
           }} />
-          {/* left scrim keeps the icon + name readable over the banner */}
           <div aria-hidden style={{
             position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
-            background: "linear-gradient(to right, var(--card) 8%, color-mix(in srgb, var(--card) 55%, transparent) 34%, transparent 52%)",
+            background: "linear-gradient(to bottom, var(--card) 35%, transparent 80%)",
           }} />
         </>
       )}
 
-      <div style={{ position: "relative", zIndex: 1, width: 46, height: 46, borderRadius: 10, background: w.icon_data ? "transparent" : accent, border: `1px solid ${w.icon_data ? "transparent" : "var(--line)"}`, display: "grid", placeItems: "center", flexShrink: 0, overflow: "hidden", boxShadow: w.icon_data ? "0 2px 8px rgba(0,0,0,0.3)" : "none" }}>
-        {w.icon_data ? <img src={w.icon_data} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <Icon name="globe" size={24} />}
-      </div>
-
-      <div style={{ position: "relative", zIndex: 1, flex: 1, minWidth: 200 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
-          <Link href={`/worlds/${w.world_id}`} className="heading" style={{ fontSize: "1.15rem", textDecoration: "none" }}>
-            {w.display_name}
-          </Link>
-          <StatusChip status={w.status} running={w.running} />
-          {w.community_server ? (
-            <span className="chip" style={{ background: "var(--green-bright)", color: "#0b3d1a" }} title={t("worlds.communityTip")}>{t("worlds.community")}</span>
+      {/* Top row: avatar + name/badges */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+        <div style={{
+          position: "relative",
+          width: 110, height: 110, borderRadius: "22px", flexShrink: 0,
+          background: w.icon_data ? "transparent" : "var(--card-2)",
+          border: `1px solid var(--line)`,
+          boxShadow: `0 0 28px ${accent}55`,
+          overflow: "hidden",
+          display: "grid", placeItems: "center",
+        }}>
+          {w.icon_data ? (
+            <img src={w.icon_data} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
-            <span className="chip" style={{ background: "var(--line-strong)", color: "var(--ink-soft)" }} title={t("worlds.privateTip")}>{t("worlds.private")}</span>
+            <Icon name="globe" size={48} />
           )}
-          {w.updateAvailable && (
-            <span className="chip" style={{ background: "var(--yellow)", color: "#1e1f22" }}>{t("worlds.updateAvailable")}</span>
-          )}
+          {/* status dot */}
+          <span style={{
+            position: "absolute", bottom: 8, right: 8,
+            width: 10, height: 10, borderRadius: "50%",
+            background: w.running ? "var(--green)" : "var(--ink-muted)",
+            border: "2px solid var(--card)",
+            boxShadow: w.running ? "0 0 10px var(--green)" : "none",
+          }} />
         </div>
-        <div className="subtle" style={{ fontSize: "0.78rem", fontWeight: 700, marginTop: 3 }}>
-          {t("worlds.portsLine", { game: w.game_port, rest: w.rest_api_port, build: w.build_id || "—" })}
-        </div>
-      </div>
 
-      <div style={{ position: "relative", zIndex: 1, display: "flex", gap: "1.4rem", textAlign: "center" }}>
-        <Stat label={t("common.players")} value={w.live ? `${w.live.currentPlayers}${w.live.maxPlayers ? "/" + w.live.maxPlayers : ""}` : "—"} />
-        <Stat label={t("common.uptime")} value={w.live ? fmtUptime(w.live.uptime) : "—"} />
-        <Stat label={t("world.serverFps")} value={w.live?.fps ?? "—"} />
-        <Stat label={t("common.day")} value={w.live?.days ?? "—"} />
-      </div>
-      {metrics && metrics.items && (() => {
-        const m = metrics.items.find((i) => i.world_id === w.world_id);
-        if (!m || !m.history || m.history.length < 2) return null;
-        return (
-          <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.1rem" }}>
-            <Sparkline points={m.history} color={w.accent_color || "var(--accent)"} />
-            <span className="subtle" style={{ fontSize: "0.6rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>CPU</span>
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+            <Link href={`/worlds/${w.world_id}`} className="heading" style={{ fontSize: "24px", textDecoration: "none", color: "var(--ink)" }}>
+              {w.display_name}
+            </Link>
           </div>
-        );
-      })()}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexWrap: "wrap" }}>
+            <StatusChip status={w.status} running={w.running} />
+            {w.community_server ? (
+              <span className="chip" style={{ background: "var(--line)", color: "var(--ink-soft)" }} title={t("worlds.communityTip")}>{t("worlds.community")}</span>
+            ) : (
+              <span className="chip" style={{ background: "var(--line)", color: "var(--ink-soft)" }} title={t("worlds.privateTip")}>{t("worlds.private")}</span>
+            )}
+            {w.updateAvailable && (
+              <span className="chip" style={{ background: "rgba(255,201,77,0.15)", color: "var(--yellow)" }}>{t("worlds.updateAvailable")}</span>
+            )}
+          </div>
+          <div className="subtle" style={{ fontSize: "14px", fontWeight: 500, color: "var(--ink-muted)", marginTop: "0.25rem" }}>
+            {t("worlds.portsLine", { game: w.game_port, rest: w.rest_api_port, build: w.build_id || "—" })}
+          </div>
+        </div>
+      </div>
 
-      <div style={{ position: "relative", zIndex: 1, display: "flex", gap: "0.5rem", flexShrink: 0 }}>
+      {/* Metrics panel */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "auto" }}>
+        <Metric icon="users" label={t("common.players")} value={w.live ? `${w.live.currentPlayers}${w.live.maxPlayers ? "/" + w.live.maxPlayers : ""}` : "—"} />
+        <Metric icon="clock" label={t("common.uptime")} value={w.live ? fmtUptime(w.live.uptime) : "—"} />
+        <Metric icon="activity" label={t("world.serverFps")} value={w.live?.fps ?? "—"} />
+        <Metric icon="cpu" label={t("common.cpu")} value={w.live?.cpu != null ? `${w.live.cpu}%` : "—"} />
+        <Metric icon="download" label={t("common.ram")} value={w.live?.ram != null ? fmtBytes(w.live.ram) : "—"} />
+        <Metric icon="globe" label={t("common.ping")} value={w.live?.ping != null ? `${w.live.ping}ms` : "—"} />
+        {metrics && metrics.items && (() => {
+          const m = metrics.items.find((i) => i.world_id === w.world_id);
+          if (!m || !m.history || m.history.length < 2) return null;
+          return (
+            <div style={{ width: 180, display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <div style={{ width: 48, height: 48, borderRadius: "var(--radius-md)", background: "rgba(255,255,255,0.04)", display: "grid", placeItems: "center" }}>
+                <Sparkline points={m.history} color={accent} width={38} height={22} />
+              </div>
+              <div>
+                <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--ink)" }}>CPU</div>
+                <div className="subtle" style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>trend</div>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* Actions */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", gap: "0.6rem", justifyContent: "flex-end", marginTop: "auto" }}>
         {w.running ? (
           <>
-            <button className="btn btn-ghost" disabled={isBusy} onClick={() => onAction(w.world_id, "restart")} title={t("common.restart")}>
-              <Icon name="restart" />
+            <button className="btn btn-outline" disabled={isBusy} onClick={() => onAction(w.world_id, "restart")} title={t("common.restart")} style={{ height: "48px", borderRadius: "var(--radius-md)" }}>
+              <Icon name="restart" /> {t("common.restart")}
             </button>
-            <button className="btn btn-danger" disabled={isBusy} onClick={() => onAction(w.world_id, "stop")} title={t("common.stop")}>
-              <Icon name="stop" />
+            <button className="btn btn-danger" disabled={isBusy} onClick={() => onAction(w.world_id, "stop")} title={t("common.stop")} style={{ height: "48px", borderRadius: "var(--radius-md)" }}>
+              <Icon name="stop" /> {t("common.stop")}
             </button>
           </>
         ) : (
-          <button className="btn btn-primary" disabled={isBusy} onClick={() => onAction(w.world_id, "start")} title={t("common.start")}>
+          <button className="btn btn-gradient" disabled={isBusy} onClick={() => onAction(w.world_id, "start")} title={t("common.start")} style={{ height: "48px", borderRadius: "var(--radius-md)" }}>
             <Icon name="play" /> {busy === "start" ? t("common.starting") : t("common.start")}
           </button>
         )}
-        <Link href={`/worlds/${w.world_id}`} className="btn btn-ghost">{t("common.manage")}</Link>
+        <Link href={`/worlds/${w.world_id}`} className="btn btn-outline" style={{ height: "48px", borderRadius: "var(--radius-md)", textDecoration: "none" }}>{t("common.manage")}</Link>
       </div>
     </div>
   );
 }
 
-function Stat({ label, value }) {
+function Metric({ icon, label, value }) {
   return (
-    <div>
-      <div className="heading" style={{ fontSize: "1.05rem" }}>{value}</div>
-      <div className="subtle" style={{ fontSize: "0.66rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
+    <div style={{ width: 180, display: "flex", alignItems: "center", gap: "0.75rem" }}>
+      <div style={{
+        width: 48, height: 48, borderRadius: "var(--radius-md)",
+        background: "rgba(255,255,255,0.04)",
+        display: "grid", placeItems: "center",
+        color: "var(--ink-soft)",
+      }}>
+        <Icon name={icon} size={20} />
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--ink)" }}>{value}</div>
+        <div className="subtle" style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--ink-muted)" }}>{label}</div>
+      </div>
     </div>
   );
 }
@@ -210,15 +264,29 @@ function Stat({ label, value }) {
 function EmptyState({ onCreate }) {
   const { t } = useTranslation();
   return (
-    <div className="panel" style={{ padding: "3rem 2rem", textAlign: "center" }}>
-      <div style={{ width: 66, height: 66, borderRadius: 8, background: "var(--yellow)", display: "grid", placeItems: "center", margin: "0 auto 1rem" }}>
-        <Icon name="globe" size={34} />
+    <div className="panel" style={{
+      padding: "3.5rem 2rem", textAlign: "center",
+      borderRadius: "var(--radius-lg)",
+      background: "var(--card)",
+      border: "1px solid var(--line)",
+      boxShadow: "0 20px 50px rgba(124,77,255,0.15)",
+      backdropFilter: "blur(24px)",
+    }}>
+      <div style={{
+        width: 80, height: 80, borderRadius: "var(--radius-md)",
+        background: "rgba(124,77,255,0.12)",
+        display: "grid", placeItems: "center", margin: "0 auto 1.25rem",
+        color: "var(--accent)",
+      }}>
+        <Icon name="globe" size={40} />
       </div>
-      <h2 className="heading" style={{ fontSize: "1.4rem", margin: "0 0 0.4rem" }}>{t("worlds.emptyTitle")}</h2>
-      <p className="subtle" style={{ fontWeight: 700, maxWidth: 460, margin: "0 auto 1.3rem" }}>
+      <h2 className="heading" style={{ fontSize: "28px", margin: "0 0 0.5rem", color: "var(--ink)" }}>{t("worlds.emptyTitle")}</h2>
+      <p className="subtle" style={{ fontSize: "15px", fontWeight: 500, maxWidth: 460, margin: "0 auto 1.5rem", color: "var(--ink-soft)" }}>
         {t("worlds.emptyBody")}
       </p>
-      <button className="btn btn-primary" onClick={onCreate}><Icon name="plus" /> {t("worlds.createWorld")}</button>
+      <button className="btn btn-gradient" onClick={onCreate} style={{ height: "48px", borderRadius: "var(--radius-md)" }}>
+        <Icon name="plus" /> {t("worlds.createWorld")}
+      </button>
     </div>
   );
 }
